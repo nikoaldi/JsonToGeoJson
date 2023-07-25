@@ -1,0 +1,16 @@
+{
+	persons: [
+		{
+			name: "John Doe",
+			age: 35
+		},
+		{
+			name: "Jane Doe",
+			age: 32
+		},
+		{
+			name: "John Jr.",
+			age: 7
+		}
+	]
+}
