@@ -9,11 +9,14 @@ public class C240 {
     private int ts;
     private C240I000 I000;
     private C240I010 I010;
+    private C240I020 I020;
     private C240I040 I040;
     private C240I041 I041;
     private C240I048 I048;
     private C240I049 I049;
-    private C240I051[] I051;
+    private C240I050 I050;
+    private C240I051 I051;
+    private C240I052 I052;
 
 
 
@@ -98,13 +101,35 @@ public class C240 {
         I049 = i049;
     }
 
-    public C240I051[] getI051() {
+    public C240I051 getI051() {
         return I051;
     }
 
-    public void setI051(C240I051[] i051) {
+    public void setI051(C240I051 i051) {
         I051 = i051;
     }
 
+    public C240I050 getI050() {
+        return I050;
+    }
 
+    public void setI050(C240I050 i050) {
+        I050 = i050;
+    }
+
+    public C240I052 getI052() {
+        return I052;
+    }
+
+    public void setI052(C240I052 i052) {
+        I052 = i052;
+    }
+
+    public C240I020 getI020() {
+        return I020;
+    }
+
+    public void setI020(C240I020 i020) {
+        I020 = i020;
+    }
 }

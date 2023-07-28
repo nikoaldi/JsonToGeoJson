@@ -3,7 +3,6 @@ package Socket;
 import CAT240GEOJSON.C240GeoJson;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
 import jakarta.websocket.Session;
 
 import java.io.IOException;
