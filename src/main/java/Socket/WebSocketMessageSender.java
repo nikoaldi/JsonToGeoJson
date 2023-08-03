@@ -40,4 +40,20 @@ public class WebSocketMessageSender {
             }
         }
     }
+
+//    public static void sendMessageToAll(String geoJson) {
+//        Set<Session> sessions = SocketClass.getSessions();
+//        for (Session session : sessions) {
+//            if (session.isOpen()) {
+//                try {
+//                    ObjectMapper objectMapper = new ObjectMapper();
+//                    String json = objectMapper.writeValueAsString(geoJson);
+//                    session.getBasicRemote().sendText(json);
+//                } catch (IOException e) {
+//                    // Handle the exception if sending the message fails
+//                    e.printStackTrace();
+//                }
+//            }
+//        }
+//    }
 }

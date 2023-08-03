@@ -29,8 +29,6 @@ public class C240Handler {
     @Inject
     public WebSocketMessageSender webSocketMessageSender;
 
-    String check = "";
-
 
 
     C240 c240 = new C240();
@@ -38,10 +36,13 @@ public class C240Handler {
     private static final String JSON_FILE_PATH = "C:\\Users\\nikoa\\OneDrive\\Documents\\json\\data.json";
     private static final String JSON_FILE_PATH2 = "C:\\Users\\nikoa\\OneDrive\\Documents\\json\\TestLowVidioRadar.json";
     double sAZ = 0.0;
-    double eAZ = 0.2;
+    double eAZ = 0.17;
 
-//    List<C240GeoJson> listGeojson = new ArrayList<>();
-//    List<Double> test = new ArrayList<>();
+    int cellTest = 0;
+
+    GeoCoordinate ownUnitStartAz = new GeoCoordinate(-6.949612491503703, 107.61957049369812);     // lat lon ownunit
+    GeoCoordinate ownUnitEndtAZ = new GeoCoordinate(-6.949612491503703, 107.61957049369812);      // lat lon ownunit
+
 
 
 //    @Scheduled(every = "1s")
@@ -50,97 +51,83 @@ public class C240Handler {
 //            c240 = jsonb.fromJson(jsonData, new C240(){}.getClass().getGenericSuperclass());
 //            c240.getI041().setSTART_AZ(sAZ);
 //            c240.getI041().setEND_AZ(eAZ);
-//            setC240(c240);
-//            String jsonData1 = new String(Files.readAllBytes(Paths.get(JSON_FILE_PATH2)));
-//            c2401 = jsonb.fromJson(jsonData1, new C240(){}.getClass().getGenericSuperclass());
-//            c2401.getI041().setSTART_AZ(sAZ);
-//            c2401.getI041().setEND_AZ(eAZ);
-//            setC240(c2401);
-//            sAZ = eAZ + 1;
-//            eAZ = sAZ +2;
+//            generateGeoJSON(c240);
+////            String jsonData1 = new String(Files.readAllBytes(Paths.get(JSON_FILE_PATH2)));
+////            c2401 = jsonb.fromJson(jsonData1, new C240(){}.getClass().getGenericSuperclass());
+////            c2401.getI041().setSTART_AZ(sAZ);
+////            c2401.getI041().setEND_AZ(eAZ);
+////            setC240(c2401);
+//            sAZ = eAZ;
+//            eAZ = eAZ + 0.17;
 //    }
-
-
-    public void setC240(C240 c240) {
-        getRangeAndCellPosition(c240);
-    }
-
-    // Calculate Range
-    public void getRangeAndCellPosition(C240 c240)  {
-        GeoCoordinate geoCrdRefStartAZ = new GeoCoordinate(-6.949612491503703, 107.61957049369812);     // lat lon ownunit
-        GeoCoordinate geoCrdRefEndtAZ = new GeoCoordinate(-6.949612491503703, 107.61957049369812);      // lat lon ownunit
-        double cellStartAZ = (c240.getI041().getCELL_DUR() * Math.pow(10,-15)) * (c240.getI041().getSTART_RG() + 1 -1) * (299792458 / 2);           //  0.0
-        double cellEndAZ = (c240.getI041().getCELL_DUR() * Math.pow(10,-15)) * (c240.getI041().getSTART_RG() + 1 -1) * (299792458 / 2);             //  0.0
-        double range = (c240.getI041().getCELL_DUR() * Math.pow(10,-15)) * (c240.getI041().getSTART_RG() + 2 -1) * (299792458 / 2) - cellStartAZ;   // 9.765624948527275
-        double latAwalAZ = GeoUtil.getInstance().getCrdFromBR(geoCrdRefStartAZ, c240.getI041().getSTART_AZ(),cellStartAZ).getLatitude();            // -6.9496124915037
-        double lonAwalAZ = GeoUtil.getInstance().getCrdFromBR(geoCrdRefStartAZ, c240.getI041().getSTART_AZ(),cellStartAZ).getLongitude();           // 107.61957049369812
-        double latAkhirAZ = GeoUtil.getInstance().getCrdFromBR(geoCrdRefEndtAZ, c240.getI041().getEND_AZ(), cellEndAZ).getLatitude();               // -6.9496124915037
-        double lonAkhirAZ = GeoUtil.getInstance().getCrdFromBR(geoCrdRefEndtAZ, c240.getI041().getEND_AZ(), cellEndAZ).getLongitude();              // 107.61957049369812
-
-//        // check
-//        check = "cellStartAZ = "+cellStartAZ+", cellEndAZ = "+cellEndAZ+", range = "+range+", latAwalAZ = "+latAwalAZ+", lonAwalAZ = "+lonAwalAZ+", latAkhirAZ = "+latAkhirAZ+", lonAkhirAZ = "+lonAkhirAZ;
-        generateGeoJSON(c240, latAwalAZ, lonAwalAZ, latAkhirAZ, lonAkhirAZ, range);
-    }
 
 
 
     // Generate Geojson
-    public void generateGeoJSON(C240 c240, double latAwalAZ, double lonAwalAZ, double latAkhirAZ, double lonAkhirAZ, double range)  {
+    public void generateGeoJSON(C240 c240)  {
 
-
-        double latAwalAZ1 = latAwalAZ;          // -6.9496124915037
-        double lonAwalAZ1 = lonAwalAZ;          // 107.61957049369812
-        double latAkhirAZ1 = latAkhirAZ;        // -6.9496124915037
-        double lonAkhirAZ1 = lonAkhirAZ;        // 107.61957049369812
-        int substringStart = 0;
-        int substringEnd = 0;
-        int resolusi = getRes(c240.getI048().getRES());
-        String vidioBlock = getVideoBlock(c240); // 2
+        String vidioBlock = getVideoBlock(c240);
         List<C240GeoJsonFeature> c240GeoJsonFeaturesList = new ArrayList<>();
         C240GeoJson geoJson = new C240GeoJson();
+        int resolusi = getRes(c240.getI048().getRES());
+        int substringStart = 0;
+        int substringEnd = resolusi;
+        int cell = 0;
+        double distanceCellStart = (c240.getI041().getCELL_DUR() * Math.pow(10,-15)) * (c240.getI041().getSTART_RG() + 1 -1) * (299792458 / 2);                     // Jarak (meter) cell mulai digambar berdasarkan bearing
+        double getLatCrdRefStartAZ = GeoUtil.getInstance().getCrdFromBR(ownUnitStartAz, c240.getI041().getSTART_AZ(),distanceCellStart).getLatitude();              // lat point 1
+        double getLonCrdRefStartAZ = GeoUtil.getInstance().getCrdFromBR(ownUnitStartAz, c240.getI041().getSTART_AZ(),distanceCellStart).getLongitude();             // lon point 1
+        double getLatCrdRefEndAZ = GeoUtil.getInstance().getCrdFromBR(ownUnitEndtAZ, c240.getI041().getEND_AZ(), distanceCellStart).getLatitude();                  // lat point 4
+        double getLonCrdRefEndAZ = GeoUtil.getInstance().getCrdFromBR(ownUnitEndtAZ, c240.getI041().getEND_AZ(), distanceCellStart).getLongitude();                 // lon point 4
 
-        // Loop Gambar Polygonn
-        for (int i = 0; i <c240.getI049().getNB_CELLS(); i++){
+        for (int k=0; k < (vidioBlock.length() / resolusi); k++){
 
-            GeoCoordinate geoCoordinateStart = new GeoCoordinate(latAwalAZ1,lonAwalAZ1); // ownunit
-            GeoCoordinate geoCoordinateEnd = new GeoCoordinate(latAkhirAZ1,lonAkhirAZ1); // ownunit
+            double getResolusi = ((double) Integer.parseInt(vidioBlock.substring(substringStart,substringEnd),16)) * 255 / 100 /100;  // substring 1 - 2 (11)
 
-            double latStart = GeoUtil.getInstance().getCrdFromBR(geoCoordinateStart, c240.getI041().getSTART_AZ(),range).getLatitude();
-            double lonStart = GeoUtil.getInstance().getCrdFromBR(geoCoordinateStart,c240.getI041().getSTART_AZ(),range).getLongitude();
-            double latEndAz = GeoUtil.getInstance().getCrdFromBR(geoCoordinateEnd,  c240.getI041().getEND_AZ(),range).getLatitude();
-            double lonEndAz = GeoUtil.getInstance().getCrdFromBR(geoCoordinateEnd, c240.getI041().getEND_AZ(),range).getLongitude();
+            if (getResolusi > 0.5){
+                GeoCoordinate geoCrdRefStartAZ = new GeoCoordinate(getLatCrdRefStartAZ, getLonCrdRefStartAZ);
+                GeoCoordinate geoCrdRefEndtAZ = new GeoCoordinate(getLatCrdRefEndAZ, getLonCrdRefEndAZ);
 
-            double[] cellPoint1 = new double[]{lonAwalAZ1, latAwalAZ1};
-            double[] cellPoint2 = new double[]{lonStart,latStart};
-            double[] cellPoint3 = new double[]{lonEndAz,latEndAz};
-            double[] cellPoint4 = new double[]{lonAkhirAZ1,latAkhirAZ1};
+                double StartCell = (c240.getI041().getCELL_DUR() * Math.pow(10,-15)) * (k + 1 -1) * (299792458 / 2);  // Distance Meter from ownUnit
+                double latPoint1 = GeoUtil.getInstance().getCrdFromBR(geoCrdRefStartAZ, c240.getI041().getSTART_AZ(),StartCell).getLatitude();            // lat point 1
+                double lonPoint1 = GeoUtil.getInstance().getCrdFromBR(geoCrdRefStartAZ, c240.getI041().getSTART_AZ(),StartCell).getLongitude();           // lon point 1
+                double latPoint4 = GeoUtil.getInstance().getCrdFromBR(geoCrdRefEndtAZ, c240.getI041().getEND_AZ(), StartCell).getLatitude();              // lat point 4
+                double lonPoint4 = GeoUtil.getInstance().getCrdFromBR(geoCrdRefEndtAZ, c240.getI041().getEND_AZ(), StartCell).getLongitude();             // lon point 4
 
+                GeoCoordinate nextPointStartAZ = new GeoCoordinate(latPoint1,lonPoint1); // ownunit
+                GeoCoordinate nextPointEndAZ = new GeoCoordinate(latPoint4,lonPoint4);
 
-            double[][] polygonCell = new double[][]{cellPoint1, cellPoint2,cellPoint3,cellPoint4};
+                double range = (c240.getI041().getCELL_DUR() * Math.pow(10,-15)) * (0 + 2 -1) * (299792458 / 2);
+                double latPoint2 = GeoUtil.getInstance().getCrdFromBR(nextPointStartAZ, c240.getI041().getSTART_AZ(),range).getLatitude();
+                double lonPoint2 = GeoUtil.getInstance().getCrdFromBR(nextPointStartAZ, c240.getI041().getSTART_AZ(),range).getLongitude();
+                double latPoint3 = GeoUtil.getInstance().getCrdFromBR(nextPointEndAZ,  c240.getI041().getEND_AZ(),range).getLatitude();
+                double lonPoint3 = GeoUtil.getInstance().getCrdFromBR(nextPointEndAZ,  c240.getI041().getEND_AZ(),range).getLongitude();
 
-            lonAwalAZ1 = lonStart;
-            latAwalAZ1 = latStart;
-            lonAkhirAZ1 = lonEndAz;
-            latAkhirAZ1 = latEndAz;
+                double[] cellPoint1 = new double[]{lonPoint1, latPoint1};
+                double[] cellPoint2 = new double[]{lonPoint2, latPoint2};
+                double[] cellPoint3 = new double[]{lonPoint3, latPoint3};
+                double[] cellPoint4 = new double[]{lonPoint4, latPoint4};
+                double[][] polygonCell = new double[][]{cellPoint1, cellPoint2,cellPoint3,cellPoint4};
 
-            C240GeoJsonGeometry geoJsonGeometry = new C240GeoJsonGeometry();
-            C240GeoJsonProperties geoJsonProperties = new C240GeoJsonProperties();
-            C240GeoJsonFeature geoJsonFeature = new C240GeoJsonFeature();
+                C240GeoJsonGeometry geoJsonGeometry = new C240GeoJsonGeometry();
+                C240GeoJsonProperties geoJsonProperties = new C240GeoJsonProperties();
+                C240GeoJsonFeature geoJsonFeature = new C240GeoJsonFeature();
 
-            geoJsonGeometry.setCoordinates(new double[][][]{polygonCell});
-            geoJsonGeometry.setType("Polygon");
+                geoJsonGeometry.setCoordinates(new double[][][]{polygonCell});
+                geoJsonGeometry.setType("Polygon");
+                geoJsonProperties.setOpacity(getResolusi);
+                geoJsonProperties.setColor("#00ff33");
+                geoJsonFeature.setType("Feature");
+                geoJsonFeature.setGeometry(geoJsonGeometry);
+                geoJsonFeature.setProperties(geoJsonProperties);
+                c240GeoJsonFeaturesList.add(geoJsonFeature);
+            }
+            substringStart = substringEnd;
             substringEnd = substringEnd + resolusi;
-
-            geoJsonProperties.setOpacity(((double) Integer.parseInt(vidioBlock.substring(substringStart,substringEnd),16)) * 255 / 100 /100);
-            geoJsonFeature.setType("Feature");
-            geoJsonFeature.setGeometry(geoJsonGeometry);
-            geoJsonFeature.setProperties(geoJsonProperties);
-            substringStart = substringEnd; //2
-            c240GeoJsonFeaturesList.add(geoJsonFeature);
+            cell = cell +1;
         }
         geoJson.setType("FeatureCollection");
         geoJson.setFeatures(c240GeoJsonFeaturesList);
-//        webSocketMessageSender.sendMessageToAll(geoJson);
+        webSocketMessageSender.sendMessageToAll(geoJson);
     }
 
     // Get Vidio Block
@@ -172,8 +159,8 @@ public class C240Handler {
         return resolusi;
     }
 
-    public String getCheck() {
-        return check;
-    }
 
+    public int getCellTest() {
+        return cellTest;
+    }
 }

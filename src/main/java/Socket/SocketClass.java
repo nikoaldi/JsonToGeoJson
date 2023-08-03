@@ -8,7 +8,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
-@ServerEndpoint("/geosocket")
+@ServerEndpoint("/geosocket1")
 @ApplicationScoped
 public class SocketClass {
 
