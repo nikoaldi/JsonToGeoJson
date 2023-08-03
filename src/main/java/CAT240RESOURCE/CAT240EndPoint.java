@@ -34,27 +34,43 @@ public class CAT240EndPoint {
     C240 c2401 = new C240();
 
     int i = 0;
+    double azStart = 0.0;
+    double azEnd = 0.17;
+
+    double azStart1 = 0.0;
+    double azEnd1 = 0.17;
     @GET
     public String getC240() throws  IOException{
-        if (i == 0) {
+        if (i == 0){
             String jsonData = new String(Files.readAllBytes(Paths.get(JSON_FILE_PATH)));
             c240 = jsonb.fromJson(jsonData, new C240(){}.getClass().getGenericSuperclass());
-            c240Handler.setC240(c240);
-            i = i+1;
-        } else {
+//            c240.getI041().setSTART_AZ(azStart);
+//            c240.getI041().setEND_AZ(azEnd);
+            c240Handler.generateGeoJSON(c240);
+            i = 1;
+        } else if (i == 1){
             String jsonData1 = new String(Files.readAllBytes(Paths.get(JSON_FILE_PATH2)));
             c2401 = jsonb.fromJson(jsonData1, new C240(){}.getClass().getGenericSuperclass());
-            c240Handler.setC240(c2401);
+//            c2401.getI041().setSTART_AZ(azStart);
+//            c2401.getI041().setEND_AZ(azEnd);
+            c240Handler.generateGeoJSON(c2401);
             i = 0;
         }
-
-        return c240Handler.getCheck();
+//            azStart1 = azEnd1;
+//            azEnd1 = azEnd1 + 0.17;
+        return "oke";
     }
 
     @GET
     @Path("/oke")
     public String getGas(){
         return "Gassss";
+    }
+
+    @GET
+    @Path("/cell")
+    public int getCell(){
+        return c240Handler.getCellTest();
     }
 
 
