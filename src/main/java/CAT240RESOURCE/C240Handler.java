@@ -40,26 +40,35 @@ public class C240Handler {
 
     int cellTest = 0;
 
+    int inc = 0;
+
     GeoCoordinate ownUnitStartAz = new GeoCoordinate(-6.949612491503703, 107.61957049369812);     // lat lon ownunit
     GeoCoordinate ownUnitEndtAZ = new GeoCoordinate(-6.949612491503703, 107.61957049369812);      // lat lon ownunit
 
 
 
-//    @Scheduled(every = "1s")
-//    public void simulasi()  throws  IOException{
-//            String jsonData = new String(Files.readAllBytes(Paths.get(JSON_FILE_PATH)));
-//            c240 = jsonb.fromJson(jsonData, new C240(){}.getClass().getGenericSuperclass());
-//            c240.getI041().setSTART_AZ(sAZ);
-//            c240.getI041().setEND_AZ(eAZ);
-//            generateGeoJSON(c240);
-////            String jsonData1 = new String(Files.readAllBytes(Paths.get(JSON_FILE_PATH2)));
-////            c2401 = jsonb.fromJson(jsonData1, new C240(){}.getClass().getGenericSuperclass());
-////            c2401.getI041().setSTART_AZ(sAZ);
-////            c2401.getI041().setEND_AZ(eAZ);
-////            setC240(c2401);
-//            sAZ = eAZ;
-//            eAZ = eAZ + 0.17;
-//    }
+    @Scheduled(every = "1s")
+    public void simulasi()  throws  IOException{
+        if (inc == 0) {
+            String jsonData = new String(Files.readAllBytes(Paths.get(JSON_FILE_PATH)));
+            c240 = jsonb.fromJson(jsonData, new C240() {
+            }.getClass().getGenericSuperclass());
+            c240.getI041().setSTART_AZ(sAZ);
+            c240.getI041().setEND_AZ(eAZ);
+            generateGeoJSON(c240);
+            inc = 1;
+        } else if (inc == 1){
+            String jsonData1 = new String(Files.readAllBytes(Paths.get(JSON_FILE_PATH2)));
+            c2401 = jsonb.fromJson(jsonData1, new C240() {
+            }.getClass().getGenericSuperclass());
+            c2401.getI041().setSTART_AZ(sAZ);
+            c2401.getI041().setEND_AZ(eAZ);
+            generateGeoJSON(c2401);
+            inc = 0;
+        }
+            sAZ = eAZ;
+            eAZ = eAZ + 0.17;
+    }
 
 
 
@@ -73,6 +82,7 @@ public class C240Handler {
         int substringStart = 0;
         int substringEnd = resolusi;
         int cell = 0;
+        double radius;
         double distanceCellStart = (c240.getI041().getCELL_DUR() * Math.pow(10,-15)) * (c240.getI041().getSTART_RG() + 1 -1) * (299792458 / 2);                     // Jarak (meter) cell mulai digambar berdasarkan bearing
         double getLatCrdRefStartAZ = GeoUtil.getInstance().getCrdFromBR(ownUnitStartAz, c240.getI041().getSTART_AZ(),distanceCellStart).getLatitude();              // lat point 1
         double getLonCrdRefStartAZ = GeoUtil.getInstance().getCrdFromBR(ownUnitStartAz, c240.getI041().getSTART_AZ(),distanceCellStart).getLongitude();             // lon point 1
@@ -108,6 +118,9 @@ public class C240Handler {
                 double[] cellPoint4 = new double[]{lonPoint4, latPoint4};
                 double[][] polygonCell = new double[][]{cellPoint1, cellPoint2,cellPoint3,cellPoint4};
 
+                GeoCoordinate circleCrdRef = new GeoCoordinate(latPoint2,lonPoint2);
+                radius = GeoUtil.getInstance().calculateRange(ownUnitStartAz,circleCrdRef);
+
                 C240GeoJsonGeometry geoJsonGeometry = new C240GeoJsonGeometry();
                 C240GeoJsonProperties geoJsonProperties = new C240GeoJsonProperties();
                 C240GeoJsonFeature geoJsonFeature = new C240GeoJsonFeature();
@@ -116,6 +129,8 @@ public class C240Handler {
                 geoJsonGeometry.setType("Polygon");
                 geoJsonProperties.setOpacity(getResolusi);
                 geoJsonProperties.setColor("#00ff33");
+                geoJsonProperties.setRadius(radius);
+                geoJsonProperties.setEndAz(c240.getI041().getEND_AZ());
                 geoJsonFeature.setType("Feature");
                 geoJsonFeature.setGeometry(geoJsonGeometry);
                 geoJsonFeature.setProperties(geoJsonProperties);
